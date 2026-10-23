@@ -1,0 +1,47 @@
+name: 软件授权开关
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 操作（renew保持现状并续签、enable启用、disable停用）
+        required: true
+        type: choice
+        default: renew
+        options: [renew, enable, disable]
+      expires_at:
+        description: 授权截止时间（留空保持；never取消到期；例如2026-11-23T23:59:59+08:00）
+        required: false
+        type: string
+      reason:
+        description: 停用时显示的原因（公开元数据，请勿填写隐私或账号信息）
+        required: false
+        type: string
+  schedule:
+    - cron: '17 * * * *'
+permissions:
+  contents: write
+concurrency:
+  group: license-publication
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: 签发授权状态
+        run: node issue.mjs
+        env:
+          LICENSE_SIGNING_KEY: ${{ secrets.LICENSE_SIGNING_KEY }}
+          LICENSE_ACTION: ${{ inputs.action || 'renew' }}
+          LICENSE_EXPIRES_AT: ${{ inputs.expires_at }}
+          LICENSE_REASON: ${{ inputs.reason }}
+      - name: 发布签名文件
+        run: |
+          git config user.name 'License Publisher'
+          git config user.email 'license-publisher@users.noreply.github.com'
+          git add control.json license.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Update signed authorization policy'
+            git push
+          fi
