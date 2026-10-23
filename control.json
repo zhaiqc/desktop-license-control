@@ -1,7 +1,7 @@
 {
   "productId": "vmos-edge-pools",
   "deploymentId": "146e89be-a7f3-43f3-aa4c-1081a13923f8",
-  "enabled": false,
+  "enabled": true,
   "expiresAt": null,
-  "reason": "授权流程验证，稍后恢复"
+  "reason": ""
 }
