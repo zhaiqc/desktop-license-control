@@ -1,8 +1,11 @@
+/* eslint @typescript-eslint/explicit-function-return-type: "off" */
 import { createPrivateKey, sign, verify, createPublicKey } from 'node:crypto'
 import fs from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
 const PREFIX = 'vmos-edge-license:v1\n'
+// Deployed clients admit at most 24 hours; keep schema/signature compatibility.
+const POLICY_LIFETIME_MS = 24 * 60 * 60 * 1000
 export function issueLicense(control, privateKey, previous = null, now = Date.now()) {
   if (
     control?.productId !== 'vmos-edge-pools' ||
@@ -44,7 +47,7 @@ export function issueLicense(control, privateKey, previous = null, now = Date.no
     revision: Math.max(now, revision + 1),
     enabled: control.enabled,
     issuedAt: now,
-    validUntil: now + 6 * 60 * 60 * 1000,
+    validUntil: now + POLICY_LIFETIME_MS,
     expiresAt: control.expiresAt,
     reason: control.reason
   }
